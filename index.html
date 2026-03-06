@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeCampus - Disaster Preparedness System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- SOS Panic Button -->
+    <button id="sosButton" class="sos-button" title="Emergency SOS Button - Press for immediate help">
+        <span class="sos-text">SOS</span>
+    </button>
+
+    <!-- SOS Modal -->
+    <div id="sosModal" class="modal hidden">
+        <div class="modal-content sos-alert">
+            <button class="close-modal">&times;</button>
+            <h2>🚨 EMERGENCY ALERT TRIGGERED</h2>
+            <p>Emergency services have been notified. This is a DRILL unless you confirmed a real emergency.</p>
+            <div class="sos-actions">
+                <button id="confirmEmergency" class="btn-danger">Confirm Real Emergency</button>
+                <button id="cancelEmergency" class="btn-secondary">Cancel - This is a Drill</button>
+            </div>
+            <div id="emergencyInfo" class="emergency-info hidden">
+                <h3>📍 Your Location Info</h3>
+                <p id="locationData"></p>
+                <h3>📞 Emergency Services Called</h3>
+                <div id="servicesAlerted" class="services-list"></div>
+                <p class="warning-text">✓ Emergency services are en route. Stay calm and follow posted safety procedures.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🛡️ SafeCampus</h1>
+                <p class="subtitle">Emergency Response Training & Preparedness</p>
+            </div>
+            <div class="header-status">
+                <span id="offlineIndicator" class="offline-badge hidden">📡 Offline Mode</span>
+                <span id="syncStatus" class="sync-badge">✓ Synced</span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="disaster-tab">Disaster Guide</button>
+            <button class="nav-tab" data-tab="map-tab">Campus Map</button>
+            <button class="nav-tab" data-tab="resources-tab">Resources</button>
+            <button class="nav-tab" data-tab="progress-tab">My Progress</button>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Disaster Guide Tab -->
+            <div id="disaster-tab" class="tab-content active">
+                <!-- Disaster Selection Section -->
+                <section class="disaster-section">
+                    <h2>🎯 Select a Disaster Scenario</h2>
+                    <p class="section-help">Choose a disaster type to learn emergency response procedures</p>
+                    <div class="disaster-selector">
+                        <label for="disasterDropdown">Choose Disaster Type:</label>
+                        <select id="disasterDropdown">
+                            <option value="">-- Select a Disaster --</option>
+                            <option value="EARTHQUAKE">🌍 Earthquake</option>
+                            <option value="FIRE">🔥 Fire</option>
+                            <option value="FLOOD">🌊 Flood</option>
+                            <option value="CYCLONE">🌪️ Cyclone</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Safety Actions Section -->
+                <section id="safetyActionsSection" class="safety-section hidden">
+                    <h2>⚡ Immediate Safety Actions</h2>
+                    <p class="section-help">Follow these steps in order during an emergency</p>
+                    <div id="safetyActions" class="actions-list">
+                        <!-- Dynamically populated -->
+                    </div>
+                </section>
+
+                <!-- Preparedness Checklist Section -->
+                <section id="checklistSection" class="checklist-section hidden">
+                    <h2>✓ Preparedness Checklist</h2>
+                    <p class="section-help">Mark items as you complete them to build your preparedness level</p>
+                    <div class="checklist-info">
+                        <p>Check off items to track your emergency readiness:</p>
+                    </div>
+                    <div id="checklistItems" class="checklist-list">
+                        <!-- Dynamically populated -->
+                    </div>
+                    <div class="checklist-progress">
+                        <p>Preparedness Score: <span id="preparednessScore">0</span>%</p>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <p id="statusMessage" class="status-message">Needs Improvement</p>
+                    </div>
+                </section>
+
+                <!-- JSON Schema Display -->
+                <section id="jsonSection" class="json-section hidden">
+                    <h2>📋 Response Data (JSON Schema)</h2>
+                    <p class="section-help">View structured emergency response data</p>
+                    <button id="toggleJsonBtn" class="toggle-btn">Show JSON</button>
+                    <button id="downloadJsonBtn" class="toggle-btn">Download JSON</button>
+                    <pre id="jsonOutput" class="json-output hidden"></pre>
+                </section>
+            </div>
+
+            <!-- Campus Map Tab -->
+            <div id="map-tab" class="tab-content">
+                <section class="map-section">
+                    <h2>🗺️ Interactive Campus Map</h2>
+                    <p class="section-help">Locate safety zones, assembly points, and evacuation routes</p>
+                    <div class="map-container">
+                        <svg id="campusMap" class="campus-map" viewBox="0 0 1000 800">
+                            <!-- Campus buildings and areas -->
+                            <defs>
+                                <linearGradient id="buildingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="safeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#51cf66;stop-opacity:0.8" />
+                                    <stop offset="100%" style="stop-color:#37b24d;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Background -->
+                            <rect width="1000" height="800" fill="#f0f2f5"/>
+
+                            <!-- Buildings -->
+                            <rect x="100" y="100" width="150" height="180" fill="url(#buildingGrad)" stroke="#333" stroke-width="2" class="map-building" data-name="Admin Block"/>
+                            <text x="175" y="195" text-anchor="middle" fill="white" font-weight="bold">Admin</text>
+
+                            <rect x="350" y="100" width="150" height="180" fill="url(#buildingGrad)" stroke="#333" stroke-width="2" class="map-building" data-name="Science Lab"/>
+                            <text x="425" y="195" text-anchor="middle" fill="white" font-weight="bold">Science</text>
+
+                            <rect x="600" y="100" width="150" height="180" fill="url(#buildingGrad)" stroke="#333" stroke-width="2" class="map-building" data-name="Library"/>
+                            <text x="675" y="195" text-anchor="middle" fill="white" font-weight="bold">Library</text>
+
+                            <rect x="100" y="400" width="150" height="180" fill="url(#buildingGrad)" stroke="#333" stroke-width="2" class="map-building" data-name="Auditorium"/>
+                            <text x="175" y="495" text-anchor="middle" fill="white" font-weight="bold">Auditorium</text>
+
+                            <rect x="350" y="400" width="150" height="180" fill="url(#buildingGrad)" stroke="#333" stroke-width="2" class="map-building" data-name="Cafeteria"/>
+                            <text x="425" y="495" text-anchor="middle" fill="white" font-weight="bold">Cafeteria</text>
+
+                            <rect x="600" y="400" width="150" height="180" fill="url(#buildingGrad)" stroke="#333" stroke-width="2" class="map-building" data-name="Sports Complex"/>
+                            <text x="675" y="495" text-anchor="middle" fill="white" font-weight="bold">Sports</text>
+
+                            <!-- Assembly Points (Safe Zones) -->
+                            <circle cx="800" cy="300" r="60" fill="url(#safeGrad)" stroke="#2f9e44" stroke-width="3" class="assembly-point" data-point="Assembly Point 1"/>
+                            <text x="800" y="310" text-anchor="middle" fill="white" font-weight="bold">A1</text>
+
+                            <circle cx="800" cy="550" r="60" fill="url(#safeGrad)" stroke="#2f9e44" stroke-width="3" class="assembly-point" data-point="Assembly Point 2"/>
+                            <text x="800" y="560" text-anchor="middle" fill="white" font-weight="bold">A2</text>
+
+                            <!-- First Aid Station -->
+                            <rect x="250" y="650" width="80" height="80" fill="#ff6b6b" stroke="#cc5555" stroke-width="2" class="map-landmark" data-name="First Aid Station"/>
+                            <text x="290" y="700" text-anchor="middle" fill="white" font-weight="bold" font-size="24">+</text>
+
+                            <!-- Fire Extinguisher Locations -->
+                            <rect x="450" y="650" width="60" height="60" fill="#ff9800" stroke="#e68900" stroke-width="2" class="map-landmark" data-name="Fire Extinguisher"/>
+                            <text x="480" y="688" text-anchor="middle" fill="white" font-weight="bold">🧯</text>
+
+                            <!-- Emergency Exit Routes (dashed lines) -->
+                            <line x1="100" y1="100" x2="800" y2="300" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+                            <line x1="350" y1="100" x2="800" y2="300" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+                            <line x1="600" y1="100" x2="800" y2="550" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+                        </svg>
+                    </div>
+
+                    <!-- Map Legend -->
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22><stop offset=%220%25%22 style=%22stop-color:%23667eea%22/><stop offset=%22100%25%22 style=%22stop-color:%23764ba2%22/></linearGradient></defs><rect width=%22100%22 height=%22100%22 fill=%22url(%23g)%22/></svg>')"></span>
+                            <span>Campus Buildings</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #51cf66"></span>
+                            <span>Assembly Points (Safe Zones)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #ff6b6b"></span>
+                            <span>First Aid Stations</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #ff9800"></span>
+                            <span>Fire Extinguishers</span>
+                        </div>
+                    </div>
+
+                    <!-- Map Details -->
+                    <div id="mapDetails" class="map-details hidden">
+                        <h3 id="selectedLocation"></h3>
+                        <p id="locationDescription"></p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Resources Tab -->
+            <div id="resources-tab" class="tab-content">
+                <!-- Emergency Resources Section -->
+                <section id="emergencySection" class="emergency-section hidden">
+                    <h2>📞 Emergency Contacts & Resources</h2>
+                    <p class="section-help">Important contacts for different types of emergencies</p>
+                    <div id="emergencyContacts" class="contacts-list">
+                        <!-- Dynamically populated -->
+                    </div>
+                </section>
+
+                <!-- General Emergency Resources -->
+                <section class="resources-section">
+                    <h2>🌐 General Emergency Resources</h2>
+                    <div class="resources-grid">
+                        <div class="resource-card">
+                            <h3>🏥 Medical Emergencies</h3>
+                            <p><strong>National Ambulance:</strong> 102</p>
+                            <p><strong>Emergency Services:</strong> 112</p>
+                            <p>For severe injuries, cardiac emergencies, or medical crises.</p>
+                        </div>
+                        <div class="resource-card">
+                            <h3>🔥 Fire Safety</h3>
+                            <p><strong>Fire Department:</strong> 101</p>
+                            <p><strong>Emergency Line:</strong> 112</p>
+                            <p>For fire incidents, hazmat situations, and rescue operations.</p>
+                        </div>
+                        <div class="resource-card">
+                            <h3>🚨 Police & Law Enforcement</h3>
+                            <p><strong>Police Emergency:</strong> 100</p>
+                            <p><strong>Emergency Services:</strong> 112</p>
+                            <p>For security issues, accidents, and criminal incidents.</p>
+                        </div>
+                        <div class="resource-card">
+                            <h3>⛑️ Disaster Management</h3>
+                            <p><strong>NDMA Helpline:</strong> 1078</p>
+                            <p><strong>State Disaster Cell:</strong> 1070</p>
+                            <p>For natural disasters, relief information, and evacuation assistance.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Progress Tab -->
+            <div id="progress-tab" class="tab-content">
+                <section class="progress-section">
+                    <h2>📊 Your Learning Progress</h2>
+                    <div class="progress-container">
+                        <div id="progressStats" class="stats-grid">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="saveProgressBtn" class="btn-primary">💾 Save Progress</button>
+                        <button id="clearProgressBtn" class="btn-secondary">🗑️ Clear Progress</button>
+                        <button id="exportProgressBtn" class="btn-info">📥 Export Data</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 SafeCampus. Be Prepared. Stay Safe.</p>
+            <p class="footer-note">This is an educational platform. In real emergencies, always call official emergency services.</p>
+        </footer>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Register Service Worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').catch(err => {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
